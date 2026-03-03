@@ -1,0 +1,300 @@
+<!--pages/route-detail/route-detail.wxml-->
+<view class="container">
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{isLoading}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 错误状态 -->
+  <view class="error-state" wx:if="{{isError && !isLoading}}">
+    <text class="error-icon">⚠️</text>
+    <text class="error-text">{{errorMessage}}</text>
+    <button class="btn-primary mt-40" bindtap="onRetry">重试</button>
+  </view>
+
+  <!-- 路线详情 -->
+  <view class="route-detail" wx:if="{{!isLoading && !isError && route}}">
+    <!-- 头部信息 -->
+    <view class="route-header card">
+      <view class="route-title-section">
+        <text class="route-title">{{route.title}}</text>
+        <text class="route-status {{route.status === 'completed' ? 'completed' : 'generating'}}">
+          {{route.status === 'completed' ? '已完成' : '生成中'}}
+        </text>
+      </view>
+      
+      <view class="route-meta">
+        <view class="meta-item">
+          <text class="meta-icon">📍</text>
+          <text class="meta-text">{{route.destination}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">📅</text>
+          <text class="meta-text">{{route.days}}天</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">💰</text>
+          <text class="meta-text">¥{{route.budget}}</text>
+        </view>
+        <view class="meta-item" wx:if="{{route.createdAt}}">
+          <text class="meta-icon">🕒</text>
+          <text class="meta-text">{{route.createdAt}}</text>
+        </view>
+      </view>
+
+      <view class="route-tags" wx:if="{{route.tags && route.tags.length > 0}}">
+        <text class="tag" wx:for="{{route.tags}}" wx:key="index">{{item}}</text>
+      </view>
+    </view>
+
+    <!-- AI生成中 - 流式输出，自动滚动到底部 -->
+    <view class="streaming-section card" wx:if="{{isGenerating}}">
+      <view class="card-title">AI正在规划路线...</view>
+      <scroll-view
+        class="streaming-output"
+        scroll-y
+        scroll-top="{{streamScrollTop}}"
+        scroll-with-animation
+        wx:if="{{streamingText}}"
+      >
+        <view id="stream-end">
+          <rich-text class="streaming-text" nodes="{{streamingText}}"></rich-text>
+        </view>
+      </scroll-view>
+      <view class="streaming-loading" wx:if="{{!streamingText}}">
+        <view class="loading-spinner small"></view>
+        <text>准备中...</text>
+      </view>
+    </view>
+
+    <!-- 你的旅行照 -->
+    <view class="route-image-section card" wx:if="{{route.imageUrl && !isGenerating}}">
+      <view class="card-title">你的旅行照</view>
+      <image 
+        src="{{route.imageUrl}}" 
+        mode="aspectFill" 
+        class="route-image"
+        bindtap="previewImage"
+        data-url="{{route.imageUrl}}"
+      />
+      <view class="image-hint">
+        <text class="hint-icon">🖼️</text>
+        <text class="hint-text">点击图片可放大查看</text>
+      </view>
+    </view>
+
+    <!-- 操作按钮 -->
+    <view class="action-buttons card" wx:if="{{!isGenerating}}">
+      <button class="btn-secondary" bindtap="copyRoute">
+        <text class="btn-icon">📋</text>
+        复制路线
+      </button>
+      <button class="btn-secondary" bindtap="saveRoute">
+        <text class="btn-icon">⭐</text>
+        保存
+      </button>
+      <button class="btn-primary" bindtap="exportRoute">
+        <text class="btn-icon">📤</text>
+        导出
+      </button>
+    </view>
+
+    <!-- 地图预览 点击展开 -->
+    <view class="map-section card" wx:if="{{markers.length > 0 && !isGenerating}}" bindtap="openMapExpand">
+      <view class="card-title">路线地图</view>
+      <map 
+        id="routeMap"
+        longitude="{{longitude}}"
+        latitude="{{latitude}}"
+        scale="{{scale}}"
+        markers="{{markers}}"
+        polyline="{{polyline}}"
+        show-location
+        style="width: 100%; height: 400rpx;"
+      ></map>
+      <view class="map-hint">
+        <text class="hint-icon">📍</text>
+        <text class="hint-text">点击地图可放大查看，点击地点可导航</text>
+      </view>
+    </view>
+
+    <!-- 地图全屏弹窗 -->
+    <view class="map-modal" wx:if="{{showMapExpanded}}" catchtap="closeMapExpand">
+      <view class="map-modal-content" catchtap="preventClose">
+        <map
+          id="routeMapFull"
+          longitude="{{longitude}}"
+          latitude="{{latitude}}"
+          scale="{{scale}}"
+          markers="{{markers}}"
+          polyline="{{polyline}}"
+          show-location
+          style="width: 100%; height: 100%;"
+          bindmarkertap="onMapMarkerTap"
+        ></map>
+        <view class="map-modal-close" catchtap="closeMapExpand">关闭</view>
+      </view>
+    </view>
+
+    <!-- 行程安排 -->
+    <view class="itinerary-section" wx:if="{{!isGenerating && route.itinerary}}">
+      <view class="section-header">
+        <text class="section-title">行程安排</text>
+        <text class="section-subtitle">总花费：¥{{calculateTotalCost()}}</text>
+      </view>
+      
+      <view class="days-list">
+        <view 
+          class="day-card {{expandedDay === index ? 'expanded' : ''}}" 
+          wx:for="{{route.itinerary}}" 
+          wx:key="day"
+          data-index="{{index}}"
+        >
+          <view class="day-header" bindtap="toggleDay" data-index="{{index}}">
+            <view class="day-info">
+              <text class="day-title">{{item.title}}</text>
+              <text class="day-cost">¥{{item.totalCost || 0}}</text>
+            </view>
+            <text class="day-toggle">{{expandedDay === index ? '收起' : '展开'}}</text>
+          </view>
+          
+          <view class="day-content" wx:if="{{expandedDay === index}}">
+            <view 
+              class="activity-item" 
+              wx:for="{{item.items}}" 
+              wx:for-item="act"
+              wx:key="index"
+            >
+              <view class="activity-main" catchtap="navigateToLocation" data-location="{{act.location}}" data-coordinates="{{act.coordinates}}">
+                <view class="activity-time">
+                  <text class="time-text">{{formatTime(act.time)}}</text>
+                </view>
+                <view class="activity-details">
+                  <view class="activity-header">
+                    <text class="activity-location">{{act.location}}</text>
+                    <text class="activity-cost" wx:if="{{act.estimatedCost > 0}}">¥{{act.estimatedCost}}</text>
+                  </view>
+                  <text class="activity-name">{{act.activity}}</text>
+                  <text class="activity-desc">{{act.description}}</text>
+                  <view class="activity-actions">
+                    <text class="action-text">点击查看位置</text>
+                    <text class="action-icon">📍</text>
+                  </view>
+                </view>
+              </view>
+              <image 
+                wx:if="{{act.imageUrl || route.imageUrl}}"
+                class="activity-image"
+                src="{{act.imageUrl || route.imageUrl}}"
+                mode="aspectFill"
+                bindtap="previewImage"
+                data-url="{{act.imageUrl || route.imageUrl}}"
+              />
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 实用建议 -->
+    <view class="tips-section card" wx:if="{{route.tips && route.tips.length > 0 && !isGenerating}}">
+      <view class="card-title">实用建议</view>
+      <view class="tips-list">
+        <view class="tip-item" wx:for="{{route.tips}}" wx:key="index">
+          <text class="tip-icon">💡</text>
+          <text class="tip-text">{{item}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 交通建议 -->
+    <view class="transportation-section card" wx:if="{{route.transportation && !isGenerating}}">
+      <view class="card-title">交通建议</view>
+      <view class="transportation-content">
+        <text class="transportation-icon">🚗</text>
+        <text class="transportation-text">{{route.transportation}}</text>
+      </view>
+    </view>
+
+    <!-- 预算总结 -->
+    <view class="budget-summary card" wx:if="{{!isGenerating}}">
+      <view class="card-title">预算总结</view>
+      <view class="budget-items">
+        <view class="budget-item">
+          <text class="budget-label">总预算</text>
+          <text class="budget-value">¥{{route.budget}}</text>
+        </view>
+        <view class="budget-item">
+          <text class="budget-label">预计花费</text>
+          <text class="budget-value">¥{{calculateTotalCost()}}</text>
+        </view>
+        <view class="budget-item budget-total">
+          <text class="budget-label">剩余预算</text>
+          <text class="budget-value">¥{{route.budget - calculateTotalCost()}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作 -->
+    <view class="bottom-actions" wx:if="{{!isGenerating}}">
+      <button class="btn-secondary" bindtap="openAdjustSheet">调整方案</button>
+      <button class="btn-primary" bindtap="shareRoute" open-type="share">分享给好友</button>
+    </view>
+  </view>
+
+  <!-- 调整方案底部弹窗 -->
+  <view class="adjust-sheet-mask" wx:if="{{showAdjustSheet}}" bindtap="closeAdjustSheet"></view>
+  <view class="adjust-sheet" wx:if="{{showAdjustSheet}}">
+    <view class="adjust-sheet-header">
+      <text class="adjust-sheet-title">调整旅行需求</text>
+      <text class="adjust-sheet-close" bindtap="closeAdjustSheet">关闭</text>
+    </view>
+    <view class="adjust-sheet-body">
+      <view class="adjust-row">
+        <text class="adjust-label">目的地</text>
+        <input class="adjust-input" value="{{adjustForm.destination}}" bindinput="onAdjustDestination" placeholder="请输入目的地" />
+      </view>
+      <view class="adjust-row">
+        <text class="adjust-label">天数</text>
+        <view class="adjust-days">
+          <view
+            wx:for="{{[1,2,3,4,5,6,7]}}"
+            wx:key="*this"
+            class="adjust-day {{adjustForm.days == item ? 'active' : ''}}"
+            bindtap="onAdjustDays"
+            data-days="{{item}}"
+          >{{item}}天</view>
+        </view>
+      </view>
+      <view class="adjust-row">
+        <text class="adjust-label">预算</text>
+        <input class="adjust-input" type="digit" value="{{adjustForm.budget}}" bindinput="onAdjustBudget" placeholder="预算(元)" />
+      </view>
+      <view class="adjust-row">
+        <text class="adjust-label">兴趣偏好</text>
+        <view class="adjust-tags">
+          <view
+            wx:for="{{allPreferences}}"
+            wx:key="*this"
+            class="adjust-tag {{adjustForm.selectedTags.indexOf(item) > -1 ? 'active' : ''}}"
+            bindtap="onAdjustTag"
+            data-tag="{{item}}"
+          >{{item}}</view>
+        </view>
+      </view>
+    </view>
+    <view class="adjust-sheet-footer">
+      <button class="btn-secondary" bindtap="closeAdjustSheet">取消</button>
+      <button class="btn-primary" bindtap="confirmAdjust">重新生成</button>
+    </view>
+  </view>
+
+  <!-- 分享中遮罩 -->
+  <view class="sharing-mask" wx:if="{{isSharing}}">
+    <view class="sharing-content">
+      <view class="sharing-spinner"></view>
+      <text class="sharing-text">生成分享图中...</text>
+    </view>
+  </view>
+</view>

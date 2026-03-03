@@ -1,0 +1,239 @@
+/* pages/index/index.wxss - 暗黑系 暖琥珀 */
+
+.page {
+  min-height: 100vh;
+  padding: 48rpx 32rpx calc(120rpx + env(safe-area-inset-bottom));
+  background: linear-gradient(135deg, #0d0d0d 0%, #1a1a1a 100%);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 40rpx;
+}
+
+.header-main {
+  flex: 1;
+}
+
+.title {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #e5e5e5;
+}
+
+.subtitle {
+  display: block;
+  font-size: 24rpx;
+  color: #888;
+  margin-top: 12rpx;
+}
+
+.header-entry {
+  font-size: 26rpx;
+  color: #D4A853;
+  padding: 12rpx 24rpx;
+}
+
+.input-wrap {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16rpx;
+  padding: 28rpx 32rpx;
+  margin-bottom: 32rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.08);
+  border-bottom: 2rpx solid transparent;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.2);
+}
+
+.input-wrap.focused {
+  border-bottom-color: #D4A853;
+}
+
+.input {
+  width: 100%;
+  min-height: 160rpx;
+  font-size: 28rpx;
+  color: #e5e5e5;
+  line-height: 1.6;
+  box-sizing: border-box;
+  border: none;
+  background: transparent;
+}
+
+.placeholder {
+  color: #666;
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 24rpx;
+  color: #666;
+  margin-top: 12rpx;
+}
+
+.btn-analyze {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background: #D4A853;
+  color: #1a1a1a;
+  font-size: 28rpx;
+  font-weight: 600;
+  border-radius: 16rpx;
+  border: none;
+  margin-bottom: 32rpx;
+  box-shadow: 0 4rpx 16rpx rgba(212, 168, 83, 0.3);
+}
+
+.btn-analyze[disabled] {
+  background: #333;
+  color: #666;
+  box-shadow: none;
+}
+
+.result-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.2);
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28rpx;
+}
+
+.result-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #e5e5e5;
+}
+
+.result-edit {
+  font-size: 24rpx;
+  color: #D4A853;
+}
+
+.result-list {
+  margin-bottom: 28rpx;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.06);
+}
+
+.result-row:last-child {
+  border-bottom: none;
+}
+
+.result-row .label {
+  width: 140rpx;
+  font-size: 28rpx;
+  color: #888;
+}
+
+.result-row .value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #e5e5e5;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 12rpx 0;
+  font-size: 28rpx;
+  color: #e5e5e5;
+  border: none;
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.15);
+  background: transparent;
+}
+
+.edit-input:focus {
+  border-bottom-color: #D4A853;
+}
+
+.tags-wrap {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16rpx;
+}
+
+.tag {
+  padding: 12rpx 24rpx;
+  background: rgba(212, 168, 83, 0.15);
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: #D4A853;
+}
+
+.tag.on {
+  background: #D4A853;
+  color: #1a1a1a;
+}
+
+.result-actions {
+  display: flex;
+  gap: 32rpx;
+  margin-top: 24rpx;
+}
+
+.result-actions button {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  font-size: 28rpx;
+  border-radius: 16rpx;
+  border: none;
+}
+
+.btn-outline {
+  background: rgba(212, 168, 83, 0.15);
+  color: #D4A853;
+  border: 1rpx solid rgba(212, 168, 83, 0.3);
+}
+
+.btn-main {
+  background: #D4A853;
+  color: #1a1a1a;
+  box-shadow: 0 4rpx 16rpx rgba(212, 168, 83, 0.3);
+}
+
+.examples {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-top: 32rpx;
+  border: 1rpx solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.2);
+}
+
+.examples-title {
+  display: block;
+  font-size: 24rpx;
+  color: #888;
+  margin-bottom: 24rpx;
+}
+
+.example {
+  padding: 24rpx;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #aaa;
+  margin-bottom: 20rpx;
+}
+
+.example:last-child {
+  margin-bottom: 0;
+}

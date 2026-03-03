@@ -1,0 +1,38 @@
+{
+  "envId": "cloud1-6grsi20q238e8402",
+  "functionRoot": "cloudfunctions",
+  "functions": [
+    {
+      "name": "login",
+      "timeout": 5,
+      "envVariables": {},
+      "runtime": "Nodejs16"
+    },
+    {
+      "name": "generate-route",
+      "timeout": 60,
+      "envVariables": {
+        "KIMI_API_KEY": "sk-XPgnHzWgkCSwYM0Nr7qTgtlZxNH3GxiwOW5y3YoZG56hzJpN"
+      },
+      "runtime": "Nodejs16"
+    },
+    {
+      "name": "get-routes",
+      "timeout": 5,
+      "envVariables": {},
+      "runtime": "Nodejs16"
+    },
+    {
+      "name": "get-route-detail",
+      "timeout": 5,
+      "envVariables": {},
+      "runtime": "Nodejs16"
+    },
+    {
+      "name": "update-profile",
+      "timeout": 5,
+      "envVariables": {},
+      "runtime": "Nodejs16"
+    },
+  ]
+}

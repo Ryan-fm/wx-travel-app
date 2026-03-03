@@ -1,0 +1,28 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/login/login",
+    "pages/route-generate/route-generate",
+    "pages/route-detail/route-detail"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#1a1a1a",
+    "navigationBarTitleText": "AI旅行规划",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#0d0d0d",
+    "enablePullDownRefresh": true
+  },
+  "style": "v2",
+  "sitemapLocation": "sitemap.json",
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": {
+      "desc": "你的位置信息将用于路线规划"
+    }
+  },
+  "requiredPrivateInfos": [
+    "getLocation"
+  ],
+  "cloud": true
+}

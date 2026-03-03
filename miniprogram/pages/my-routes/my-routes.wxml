@@ -1,0 +1,162 @@
+<!--pages/my-routes/my-routes.wxml-->
+<view class="container">
+  <!-- 搜索和筛选栏 -->
+  <view class="filter-bar card">
+    <view class="search-section" wx:if="{{showSearch}}">
+      <view class="search-box">
+        <input 
+          class="search-input" 
+          placeholder="搜索目的地" 
+          value="{{searchValue}}"
+          bindinput="onSearchInput"
+          bindconfirm="onSearchConfirm"
+          confirm-type="search"
+        />
+        <text class="search-icon">🔍</text>
+        <text class="search-clear" bindtap="onClearSearch">✕</text>
+      </view>
+    </view>
+    
+    <view class="filter-actions">
+      <view class="filter-tabs">
+        <view 
+          class="filter-tab {{filterStatus === 'all' ? 'active' : ''}}" 
+          bindtap="onFilterStatusChange"
+          data-status="all"
+        >
+          全部
+        </view>
+        <view 
+          class="filter-tab {{filterStatus === 'completed' ? 'active' : ''}}" 
+          bindtap="onFilterStatusChange"
+          data-status="completed"
+        >
+          已完成
+        </view>
+        <view 
+          class="filter-tab {{filterStatus === 'generating' ? 'active' : ''}}" 
+          bindtap="onFilterStatusChange"
+          data-status="generating"
+        >
+          生成中
+        </view>
+      </view>
+      
+      <view class="action-buttons">
+        <button class="btn-icon" bindtap="toggleSearch">
+          <text class="btn-icon-text">{{showSearch ? '取消' : '🔍'}}</text>
+        </button>
+        <button class="btn-icon" bindtap="onSortChange" data-sort="createdAt">
+          <text class="btn-icon-text">📅</text>
+        </button>
+        <button class="btn-icon" bindtap="onSortChange" data-sort="budget">
+          <text class="btn-icon-text">💰</text>
+        </button>
+      </view>
+    </view>
+    
+    <view class="sort-info" wx:if="{{sortBy}}">
+      <text class="sort-text">
+        按{{sortBy === 'createdAt' ? '时间' : '预算'}}
+        {{sortOrder === 'desc' ? '降序' : '升序'}}排序
+      </text>
+    </view>
+  </view>
+
+  <!-- 路线列表 -->
+  <view class="routes-list">
+    <view 
+      class="route-card card" 
+      wx:for="{{routes}}" 
+      wx:key="_id"
+      bindtap="navigateToRouteDetail"
+      data-id="{{item._id}}"
+    >
+      <view class="route-header">
+        <view class="route-title-section">
+          <text class="route-title">{{item.title}}</text>
+          <text class="route-status" style="color: {{getStatusColor(item.status)}}">
+            {{getStatusText(item.status)}}
+          </text>
+        </view>
+        
+        <view class="route-actions">
+          <button class="btn-icon-small" bindtap="onShareRoute" data-id="{{item._id}}" catchtap>
+            <text class="btn-icon-text">📤</text>
+          </button>
+          <button class="btn-icon-small btn-danger" bindtap="onDeleteRoute" data-id="{{item._id}}" data-index="{{index}}" catchtap>
+            <text class="btn-icon-text">🗑️</text>
+          </button>
+        </view>
+      </view>
+      
+      <view class="route-meta">
+        <view class="meta-item">
+          <text class="meta-icon">📍</text>
+          <text class="meta-text">{{item.destination}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">📅</text>
+          <text class="meta-text">{{item.days}}天</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">💰</text>
+          <text class="meta-text">¥{{item.budget}}</text>
+        </view>
+        <view class="meta-item">
+          <text class="meta-icon">🕒</text>
+          <text class="meta-text">{{formatDate(item.createdAt)}}</text>
+        </view>
+      </view>
+      
+      <view class="route-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+        <text class="tag" wx:for="{{item.tags}}" wx:key="index">{{item}}</text>
+      </view>
+      
+      <view class="route-progress" wx:if="{{item.status === 'generating'}}">
+        <view class="progress-bar">
+          <view class="progress-fill" style="width: 60%"></view>
+        </view>
+        <text class="progress-text">AI生成中...</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{!isLoading && routes.length === 0}}">
+    <text class="empty-icon">🗺️</text>
+    <text class="empty-text">还没有生成过路线</text>
+    <text class="empty-hint">点击下方按钮开始规划您的第一条路线</text>
+    <button class="btn-primary mt-40" bindtap="navigateToGenerate">开始规划</button>
+  </view>
+
+  <!-- 加载更多 -->
+  <view class="load-more" wx:if="{{hasMore && routes.length > 0}}">
+    <text class="load-more-text" bindtap="loadMore" wx:if="{{!isRefreshing}}">
+      点击加载更多
+    </text>
+    <view class="loading-small" wx:else>
+      <view class="loading-spinner-small"></view>
+      <text class="loading-text-small">加载中...</text>
+    </view>
+  </view>
+
+  <!-- 没有更多 -->
+  <view class="no-more" wx:if="{{!hasMore && routes.length > 0}}">
+    <text class="no-more-text">没有更多路线了</text>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="loading" wx:if="{{isLoading && routes.length === 0}}">
+    <view class="loading-spinner"></view>
+    <text class="loading-text">加载中...</text>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-actions">
+    <button class="btn-primary" bindtap="navigateToGenerate">
+      <text class="btn-icon">➕</text>
+      规划新路线
+    </button>
+  </view>
+</view>

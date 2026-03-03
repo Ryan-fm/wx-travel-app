@@ -1,0 +1,180 @@
+<!--pages/route-generate/route-generate.wxml-->
+<view class="container">
+  <!-- 步骤指示器 -->
+  <view class="steps" wx:if="{{currentStep === 1 || currentStep === 2}}">
+    <view class="step-item {{currentStep === 1 ? 'active' : ''}}">
+      <view class="step-number">1</view>
+      <text class="step-text">基本信息</text>
+    </view>
+    <view class="step-line"></view>
+    <view class="step-item {{currentStep === 2 ? 'active' : ''}}">
+      <view class="step-number">2</view>
+      <text class="step-text">偏好设置</text>
+    </view>
+  </view>
+
+  <!-- 第一步：基本信息 -->
+  <view class="step-content" wx:if="{{currentStep === 1}}">
+    <view class="card">
+      <view class="card-title">目的地</view>
+      <view class="input-group">
+        <input 
+          class="input-field" 
+          placeholder="请输入目的地，如：上海、北京、杭州" 
+          value="{{destination}}"
+          bindinput="onDestinationInput"
+          confirm-type="done"
+        />
+        <view class="input-hint">或</view>
+        <button class="btn-secondary" bindtap="onUseCurrentLocation">
+          <text class="btn-icon">📍</text>
+          使用当前位置
+        </button>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">旅行天数</view>
+      <view class="days-selector">
+        <view 
+          class="day-item {{days === day ? 'selected' : ''}}" 
+          wx:for="{{dayOptions}}" 
+          wx:key="index"
+          bindtap="onDaySelect"
+          data-days="{{item}}"
+        >
+          <text class="day-number">{{item}}</text>
+          <text class="day-text">天</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">预算范围</view>
+      <view class="budget-section">
+        <text class="budget-value">¥{{budget}}</text>
+        <slider 
+          min="{{minBudget}}" 
+          max="{{maxBudget}}" 
+          step="{{budgetStep}}" 
+          value="{{budget}}" 
+          bindchange="onBudgetChange"
+          activeColor="#4CAF50"
+          backgroundColor="#e0e0e0"
+          block-size="20"
+        />
+        <view class="budget-range">
+          <text>¥{{minBudget}}</text>
+          <text>¥{{maxBudget}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="action-buttons">
+      <button class="btn-primary" bindtap="onNextStep">下一步</button>
+    </view>
+  </view>
+
+  <!-- 第二步：偏好设置 -->
+  <view class="step-content" wx:if="{{currentStep === 2}}">
+    <view class="card">
+      <view class="card-title">兴趣标签</view>
+      <view class="card-subtitle">选择您的兴趣点（最多5个）</view>
+      <view class="tags-container">
+        <view 
+          class="tag-item {{selectedTags.indexOf(item.id) > -1 ? 'selected' : ''}}" 
+          wx:for="{{tagOptions}}" 
+          wx:key="id"
+          bindtap="onTagSelect"
+          data-id="{{item.id}}"
+        >
+          <text class="tag-icon">{{item.icon}}</text>
+          <text class="tag-name">{{item.name}}</text>
+        </view>
+      </view>
+      <view class="selected-tags" wx:if="{{selectedTags.length > 0}}">
+        <text class="selected-title">已选择：</text>
+        <view class="selected-tags-list">
+          <view class="selected-tag" wx:for="{{selectedTags}}" wx:key="index">
+            <text class="selected-tag-icon">{{getTagIcon(item)}}</text>
+            <text class="selected-tag-name">{{getTagName(item)}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">旅行风格</view>
+      <view class="card-subtitle">选择适合您的旅行风格</view>
+      <view class="style-options">
+        <view 
+          class="style-item {{style === item.id ? 'selected' : ''}}" 
+          wx:for="{{styleOptions}}" 
+          wx:key="id"
+          bindtap="onStyleSelect"
+          data-id="{{item.id}}"
+        >
+          <view class="style-header">
+            <text class="style-name">{{item.name}}</text>
+            <text class="style-check" wx:if="{{style === item.id}}">✓</text>
+          </view>
+          <text class="style-desc">{{item.desc}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="summary-card card">
+      <view class="card-title">行程摘要</view>
+      <view class="summary-item">
+        <text class="summary-label">目的地：</text>
+        <text class="summary-value">{{destination || '未填写'}}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">天数：</text>
+        <text class="summary-value">{{days}}天</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">预算：</text>
+        <text class="summary-value">¥{{budget}}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">兴趣标签：</text>
+        <text class="summary-value" wx:if="{{selectedTags.length > 0}}">
+          {{selectedTags}}
+        </text>
+        <text class="summary-value text-muted" wx:else>未选择</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">旅行风格：</text>
+        <text class="summary-value">{{getStyleName(style)}}</text>
+      </view>
+    </view>
+
+    <view class="action-buttons">
+      <button class="btn-secondary" bindtap="onPrevStep">上一步</button>
+      <button 
+        class="btn-primary" 
+        bindtap="onGenerateRoute"
+        disabled="{{selectedTags.length === 0}}"
+      >
+        生成路线
+      </button>
+    </view>
+  </view>
+
+  <!-- 生成中遮罩 -->
+  <view class="generating-mask" wx:if="{{isGenerating}}">
+    <view class="generating-content">
+      <view class="generating-spinner"></view>
+      <text class="generating-text">AI正在为您规划路线...</text>
+      <scroll-view class="streaming-output" scroll-y scroll-into-view="{{streamingText ? 'stream-end' : ''}}" wx:if="{{streamingText}}">
+        <rich-text class="streaming-text" id="stream-end" nodes="{{streamingText}}"></rich-text>
+      </scroll-view>
+      <view class="progress-bar">
+        <view class="progress-fill" style="width: {{generateProgress}}%"></view>
+      </view>
+      <text class="progress-text">{{generateProgress}}%</text>
+      <text class="generating-hint">请耐心等待，这可能需要一些时间</text>
+    </view>
+  </view>
+</view>

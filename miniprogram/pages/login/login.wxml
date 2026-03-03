@@ -1,0 +1,79 @@
+<!--pages/login/login.wxml-->
+<view class="login-container">
+  <!-- 顶部背景 -->
+  <view class="login-header">
+    <view class="header-bg"></view>
+    <view class="header-content">
+      <text class="app-name">AI旅游路线规划</text>
+      <text class="app-slogan">智能生成个性化旅行路线</text>
+    </view>
+  </view>
+
+  <!-- 登录表单 -->
+  <view class="login-form">
+    <!-- 微信登录 -->
+    <view class="login-section">
+      <view class="section-title">微信一键登录</view>
+      <view class="section-desc">快速登录，享受个性化服务</view>
+      
+      <button 
+        class="login-btn wechat-btn" 
+        bindtap="onWechatLogin"
+        open-type="getUserProfile"
+        wx:if="{{canIUseGetUserProfile}}"
+        disabled="{{isLoggingIn}}"
+      >
+        <view class="btn-content">
+          <text class="btn-icon">💚</text>
+          <text class="btn-text">
+            {{isLoggingIn ? '登录中...' : '微信一键登录'}}
+          </text>
+        </view>
+      </button>
+      
+      <button 
+        class="login-btn wechat-btn" 
+        bindtap="onWechatLogin"
+        wx:else
+        disabled="{{isLoggingIn}}"
+      >
+        <view class="btn-content">
+          <text class="btn-icon">💚</text>
+          <text class="btn-text">
+            {{isLoggingIn ? '登录中...' : '微信登录'}}
+          </text>
+        </view>
+      </button>
+    </view>
+
+    <!-- 错误提示 -->
+    <view class="error-message" wx:if="{{loginError}}">
+      <text class="error-icon">⚠️</text>
+      <text class="error-text">{{loginError}}</text>
+    </view>
+
+    <!-- 注册链接 -->
+    <view class="register-link">
+      <text>还没有账号？</text>
+      <text class="link-text" bindtap="navigateToRegister">立即注册</text>
+    </view>
+  </view>
+
+  <!-- 底部协议 -->
+  <view class="login-footer">
+    <text class="agreement-text">
+      登录即表示您已阅读并同意
+      <text class="link-text" bindtap="onAgreementTap">《用户协议》</text>
+      和
+      <text class="link-text" bindtap="onPrivacyTap">《隐私政策》</text>
+    </text>
+  </view>
+
+  <!-- 加载遮罩 -->
+  <view class="loading-mask" wx:if="{{isLoggingIn}}">
+    <view class="loading-content">
+      <view class="loading-spinner"></view>
+      <text class="loading-text">登录中...</text>
+    </view>
+  </view>
+</view>

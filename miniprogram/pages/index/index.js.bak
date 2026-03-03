@@ -1,0 +1,327 @@
+// pages/index/index.js
+const app = getApp()
+
+Page({
+  data: {
+    userInfo: null,
+    hasUserInfo: false,
+    canIUseGetUserProfile: false,
+    userInput: '',
+    showAnalysis: false,
+    analysisResult: null,
+    isAnalyzing: false,
+    isGenerating: false,
+    routes: []
+  },
+
+  onLoad: function () {
+    if (wx.getUserProfile) {
+      this.setData({
+        canIUseGetUserProfile: true
+      })
+    }
+    
+    // 检查登录状态
+    if (app.globalData.userInfo) {
+      this.setData({
+        userInfo: app.globalData.userInfo,
+        hasUserInfo: true
+      })
+    }
+    
+    // 加载用户路线
+    this.loadUserRoutes()
+  },
+
+  onShow: function () {
+    // 每次显示页面时检查登录状态
+    if (app.globalData.userInfo) {
+      this.setData({
+        userInfo: app.globalData.userInfo,
+        hasUserInfo: true
+      })
+      // 重新加载路线数据
+      this.loadUserRoutes()
+    }
+  },
+
+  // 加载用户路线
+  loadUserRoutes: function() {
+    const that = this
+    
+    if (!app.globalData.isLoggedIn) {
+      that.setData({ routes: [] })
+      return
+    }
+    
+    wx.cloud.callFunction({
+      name: 'get-routes',
+      data: {
+        page: 1,
+        limit: 10
+      },
+      success: (res) => {
+        console.log('获取用户路线成功:', res)
+        that.setData({
+          routes: res.result.routes || []
+        })
+      },
+      fail: (err) => {
+        console.error('获取用户路线失败:', err)
+        that.setData({ routes: [] })
+      }
+    })
+  },
+
+  // 处理登录
+  handleLogin: function() {
+    const that = this
+    app.login(function(success) {
+      if (success) {
+        that.setData({
+          userInfo: app.globalData.userInfo,
+          hasUserInfo: true
+        })
+        // 重新加载数据
+        that.loadUserRoutes()
+      }
+    })
+  },
+
+  // 用户输入
+  onUserInput: function(e) {
+    this.setData({
+      userInput: e.detail.value
+    })
+  },
+
+  // 使用示例
+  useExample: function(e) {
+    const example = e.currentTarget.dataset.example
+    this.setData({
+      userInput: example
+    })
+  },
+
+  // AI分析用户输入
+  analyzeInput: function() {
+    const that = this
+    const { userInput } = this.data
+    
+    if (!userInput.trim()) {
+      wx.showToast({
+        title: '请输入您的旅行需求',
+        icon: 'none'
+      })
+      return
+    }
+    
+    this.setData({
+      isAnalyzing: true
+    })
+    
+    wx.showLoading({
+      title: 'AI分析中...',
+      mask: true
+    })
+    
+    // 调用AI分析云函数
+    wx.cloud.callFunction({
+      name: 'analyze-input',
+      data: {
+        input: userInput.trim()
+      },
+      success: (res) => {
+        console.log('AI分析成功:', res)
+        wx.hideLoading()
+        that.setData({ 
+          isAnalyzing: false,
+          showAnalysis: true,
+          analysisResult: res.result.analysis
+        })
+      },
+      fail: (err) => {
+        console.error('AI分析失败:', err)
+        wx.hideLoading()
+        that.setData({ isAnalyzing: false })
+        
+        // 如果云函数调用失败，使用本地分析
+        const localAnalysis = that.localAnalyze(userInput)
+        that.setData({
+          showAnalysis: true,
+          analysisResult: localAnalysis
+        })
+      }
+    })
+  },
+
+  // 本地分析用户输入（备用方案）
+  localAnalyze: function(input) {
+    const analysis = {
+      destination: '',
+      days: 3,
+      budget: 2000,
+      preferences: []
+    }
+    
+    // 提取目的地
+    const cityMatch = input.match(/去(.+?)(玩|旅游|游|天|日)/)
+    if (cityMatch) {
+      analysis.destination = cityMatch[1].trim()
+    }
+    
+    // 提取天数
+    const daysMatch = input.match(/(\d+)[天日]/)
+    if (daysMatch) {
+      analysis.days = parseInt(daysMatch[1])
+    }
+    
+    // 提取预算
+    const budgetMatch = input.match(/(\d+)元/)
+    if (budgetMatch) {
+      analysis.budget = parseInt(budgetMatch[1])
+    }
+    
+    // 提取偏好
+    const preferences = []
+    if (input.includes('美食') || input.includes('吃')) {
+      preferences.push('美食')
+    }
+    if (input.includes('文化') || input.includes('历史') || input.includes('博物馆')) {
+      preferences.push('文化')
+    }
+    if (input.includes('自然') || input.includes('风景') || input.includes('山水')) {
+      preferences.push('自然')
+    }
+    if (input.includes('购物') || input.includes('逛街')) {
+      preferences.push('购物')
+    }
+    if (input.includes('休闲') || input.includes('放松') || input.includes('度假')) {
+      preferences.push('休闲')
+    }
+    if (input.includes('探险') || input.includes('冒险')) {
+      preferences.push('探险')
+    }
+    
+    analysis.preferences = preferences.length > 0 ? preferences : ['文化']
+    
+    // 如果没有提取到目的地，使用默认值
+    if (!analysis.destination) {
+      analysis.destination = '北京'
+    }
+    
+    return analysis
+  },
+
+  // 编辑分析结果
+  editAnalysis: function() {
+    this.setData({
+      showAnalysis: false
+    })
+  },
+
+  // 确认分析结果并生成路线
+  confirmAnalysis: function() {
+    const that = this
+    const { analysisResult } = this.data
+    
+    if (!analysisResult) {
+      wx.showToast({
+        title: '请先分析需求',
+        icon: 'none'
+      })
+      return
+    }
+    
+    if (!app.checkAuth(this)) {
+      return
+    }
+    
+    this.setData({
+      isGenerating: true
+    })
+    
+    wx.showLoading({
+      title: 'AI正在规划路线...',
+      mask: true
+    })
+    
+    wx.cloud.callFunction({
+      name: 'generate-route',
+      data: {
+        destination: analysisResult.destination,
+        days: analysisResult.days,
+        budget: analysisResult.budget || 2000,
+        tags: analysisResult.preferences || [],
+        style: 'balanced'
+      },
+      success: (res) => {
+        console.log('生成路线成功:', res)
+        wx.hideLoading()
+        that.setData({ isGenerating: false })
+        
+        if (res.result && res.result.success) {
+          const routeId = res.result.data._id
+          // 跳转到路线详情页
+          wx.navigateTo({
+            url: `/pages/route-detail/route-detail?id=${routeId}`
+          })
+          // 重新加载路线列表
+          that.loadUserRoutes()
+        } else {
+          wx.showToast({
+            title: res.result.message || '生成路线失败',
+            icon: 'none'
+          })
+        }
+      },
+      fail: (err) => {
+        console.error('生成路线失败:', err)
+        wx.hideLoading()
+        that.setData({ isGenerating: false })
+        wx.showToast({
+          title: '生成路线失败，请重试',
+          icon: 'none'
+        })
+      }
+    })
+  },
+
+  // 生成路线（直接生成，不经过分析）
+  generateRoute: function() {
+    this.confirmAnalysis()
+  },
+
+  // 查看路线详情
+  viewRouteDetail: function(e) {
+    const routeId = e.currentTarget.dataset.id
+    wx.navigateTo({
+      url: `/pages/route-detail/route-detail?id=${routeId}`
+    })
+  },
+
+  // 查看历史路线
+  viewHistory: function() {
+    if (!app.checkAuth(this)) {
+      return
+    }
+    
+    wx.navigateTo({
+      url: '/pages/my-routes/my-routes'
+    })
+  },
+
+  // 下拉刷新
+  onPullDownRefresh: function() {
+    this.loadUserRoutes()
+    wx.stopPullDownRefresh()
+  },
+
+  // 分享
+  onShareAppMessage: function() {
+    return {
+      title: 'AI旅行规划 - 智能生成个性化旅行路线',
+      path: '/pages/index/index'
+    }
+  }
+})

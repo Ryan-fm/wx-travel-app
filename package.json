@@ -1,0 +1,33 @@
+{
+  "name": "wx-travel-app",
+  "version": "1.0.0",
+  "description": "AI旅游路线规划微信小程序",
+  "main": "miniprogram/app.js",
+  "scripts": {
+    "dev": "微信开发者工具",
+    "deploy": "微信开发者工具上传",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "微信小程序",
+    "旅游",
+    "AI",
+    "路线规划",
+    "云开发"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {},
+  "devDependencies": {},
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-repo/wx-travel-app.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-repo/wx-travel-app/issues"
+  },
+  "homepage": "https://github.com/your-repo/wx-travel-app#readme"
+}

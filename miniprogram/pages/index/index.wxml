@@ -1,0 +1,97 @@
+<view class="page">
+  <!-- 顶部标题区 -->
+  <view class="header">
+    <view class="header-main">
+      <text class="title">AI旅行规划</text>
+      <text class="subtitle">输入您的旅行想法</text>
+    </view>
+    <view class="header-entry" bindtap="viewHistory">历史记录</view>
+  </view>
+
+  <!-- 输入区 无边框 聚焦底部主色 -->
+  <view class="input-wrap {{inputFocused ? 'focused' : ''}}">
+    <textarea
+      class="input"
+      placeholder="如：北京3天游，预算3000，喜欢历史文化"
+      placeholder-class="placeholder"
+      value="{{userInput}}"
+      bindinput="onUserInput"
+      bindfocus="onInputFocus"
+      bindblur="onInputBlur"
+      maxlength="200"
+    />
+    <text class="char-count">{{userInput.length}}/200</text>
+  </view>
+
+  <!-- 分析按钮 -->
+  <button
+    class="btn-analyze"
+    bindtap="analyzeInput"
+    disabled="{{userInput.length === 0 || isAnalyzing}}"
+    wx:if="{{!showAnalysis}}"
+  >
+    {{isAnalyzing ? '分析中...' : 'AI分析'}}
+  </button>
+
+  <!-- AI分析结果 -->
+  <view class="result-card" wx:if="{{showAnalysis && analysisResult}}">
+    <view class="result-header">
+      <text class="result-title">分析结果</text>
+      <text class="result-edit" bindtap="toggleEditMode">{{isEditMode ? '完成' : '编辑'}}</text>
+    </view>
+    <view class="result-list">
+      <view class="result-row">
+        <text class="label">目的地</text>
+        <input wx:if="{{isEditMode}}" class="edit-input" value="{{analysisResult.destination}}" bindinput="onEditDestination" />
+        <text wx:else class="value">{{analysisResult.destination}}</text>
+      </view>
+      <view class="result-row">
+        <text class="label">天数</text>
+        <input wx:if="{{isEditMode}}" class="edit-input" type="number" value="{{analysisResult.days}}" bindinput="onEditDays" />
+        <text wx:else class="value">{{analysisResult.days}}天</text>
+      </view>
+      <view class="result-row">
+        <text class="label">预算</text>
+        <input wx:if="{{isEditMode}}" class="edit-input" type="number" value="{{analysisResult.budget}}" bindinput="onEditBudget" />
+        <text wx:else class="value">¥{{analysisResult.budget}}</text>
+      </view>
+      <view class="result-row">
+        <text class="label">偏好</text>
+        <view wx:if="{{isEditMode}}" class="tags-wrap">
+          <view
+            wx:for="{{allPreferences}}"
+            wx:key="*this"
+            class="tag {{analysisResult.preferences.indexOf(item) > -1 ? 'on' : ''}}"
+            bindtap="togglePreference"
+            data-preference="{{item}}"
+          >{{item}}</view>
+        </view>
+        <text wx:else class="value">{{analysisResult.preferences.join('、') || '无'}}</text>
+      </view>
+    </view>
+    <view class="result-actions">
+      <button class="btn-outline" bindtap="reanalyze">重新分析</button>
+      <button class="btn-main" bindtap="confirmAnalysis">生成路线</button>
+    </view>
+  </view>
+
+  <!-- 示例 -->
+  <view class="examples" wx:if="{{!userInput && !showAnalysis}}">
+    <text class="examples-title">参考示例</text>
+    <view
+      class="example"
+      bindtap="useExample"
+      data-example="日本东京4天自由行，预算8000，喜欢动漫和美食"
+    >东京4天，预算8000，动漫美食</view>
+    <view
+      class="example"
+      bindtap="useExample"
+      data-example="泰国曼谷5日游，预算5000，喜欢寺庙和夜市"
+    >曼谷5天，预算5000，寺庙夜市</view>
+    <view
+      class="example"
+      bindtap="useExample"
+      data-example="韩国首尔3日游，预算4000，喜欢购物和韩餐"
+    >首尔3天，预算4000，购物韩餐</view>
+  </view>
+</view>
