@@ -2,7 +2,7 @@
   <!-- 顶部标题区 -->
   <view class="header">
     <view class="header-main">
-      <text class="title">AI旅行规划</text>
+      <text class="title">旅行规划</text>
       <text class="subtitle">输入您的旅行想法</text>
     </view>
     <view class="header-entry" bindtap="viewHistory">历史记录</view>
@@ -20,7 +20,13 @@
       bindblur="onInputBlur"
       maxlength="200"
     />
-    <text class="char-count">{{userInput.length}}/200</text>
+    <view class="input-footer">
+      <view class="voice-btn {{isRecording ? 'recording' : ''}}" bindtap="toggleVoiceInput">
+        <text class="voice-icon">{{isRecording ? '⏹' : '🎤'}}</text>
+        <text class="voice-text">{{isRecording ? '停止' : '语音'}}</text>
+      </view>
+      <text class="char-count">{{userInput.length}}/200</text>
+    </view>
   </view>
 
   <!-- 分析按钮 -->
@@ -30,10 +36,10 @@
     disabled="{{userInput.length === 0 || isAnalyzing}}"
     wx:if="{{!showAnalysis}}"
   >
-    {{isAnalyzing ? '分析中...' : 'AI分析'}}
+    {{isAnalyzing ? '分析中...' : '智能分析'}}
   </button>
 
-  <!-- AI分析结果 -->
+  <!-- 分析结果 -->
   <view class="result-card" wx:if="{{showAnalysis && analysisResult}}">
     <view class="result-header">
       <text class="result-title">分析结果</text>

@@ -14,10 +14,12 @@ Page({
     isGenerating: false,
     routes: [],
     isEditMode: false,
-    allPreferences: ['美食', '文化', '自然', '购物', '休闲', '探险', '历史', '艺术', '摄影', '运动']
-  },
+    allPreferences: ['美食', '文化', '自然', '购物', '休闲', '探险', '历史', '艺术', '摄影', '运动'],
+      isRecording: false,
+      recorderManager: null
+    },
 
-  onLoad: function () {
+    onLoad: function () {
     if (wx.getUserProfile) {
       this.setData({
         canIUseGetUserProfile: true
@@ -104,6 +106,135 @@ Page({
 
   onInputBlur: function() {
     this.setData({ inputFocused: false })
+  },
+
+  // 切换语音输入
+  toggleVoiceInput: function() {
+    const that = this
+
+    if (this.data.isRecording) {
+      // 停止录音
+      this.stopRecording()
+    } else {
+      // 开始录音
+      this.startRecording()
+    }
+  },
+
+  // 开始录音
+  startRecording: function() {
+    const that = this
+
+    // 获取录音管理器
+    if (!this.data.recorderManager) {
+      this.setData({
+        recorderManager: wx.getRecorderManager()
+      })
+    }
+
+    const recorderManager = this.data.recorderManager
+
+    // 监听录音结束事件
+    recorderManager.onStop((res) => {
+      console.log('录音结束', res)
+      const { tempFilePath, duration } = res
+
+      // 如果录音时间太短，提示用户
+      if (duration < 1000) {
+        wx.showToast({
+          title: '录音时间太短',
+          icon: 'none'
+        })
+        that.setData({ isRecording: false })
+        return
+      }
+
+      // 识别语音
+      that.recognizeVoice(tempFilePath)
+    })
+
+    // 监听录音错误事件
+    recorderManager.onError((err) => {
+      console.error('录音错误', err)
+      wx.showToast({
+        title: '录音失败',
+        icon: 'none'
+      })
+      that.setData({ isRecording: false })
+    })
+
+    // 开始录音
+    recorderManager.start({
+      format: 'mp3',
+      duration: 60000 // 最长60秒
+    })
+
+    this.setData({ isRecording: true })
+
+    wx.showToast({
+      title: '开始录音',
+      icon: 'none'
+    })
+  },
+
+  // 停止录音
+  stopRecording: function() {
+    if (this.data.recorderManager) {
+      this.data.recorderManager.stop()
+    }
+    this.setData({ isRecording: false })
+  },
+
+  // 识别语音
+  recognizeVoice: function(filePath) {
+    const that = this
+
+    wx.showLoading({
+      title: '识别中...',
+      mask: true
+    })
+
+    // 使用微信同声传译插件或云函数进行语音识别
+    // 这里使用云开发AI能力进行语音识别
+    wx.cloud.callFunction({
+      name: 'voice-recognition',
+      data: {
+        fileID: filePath
+      },
+      success: (res) => {
+        wx.hideLoading()
+        console.log('语音识别结果', res)
+
+        if (res.result && res.result.text) {
+          const recognizedText = res.result.text
+          // 将识别结果添加到输入框
+          const currentInput = that.data.userInput
+          that.setData({
+            userInput: currentInput + (currentInput ? '，' : '') + recognizedText
+          })
+          wx.showToast({
+            title: '识别成功',
+            icon: 'success'
+          })
+        } else {
+          wx.showToast({
+            title: '未识别到内容',
+            icon: 'none'
+          })
+        }
+      },
+      fail: (err) => {
+        wx.hideLoading()
+        console.error('语音识别失败', err)
+
+        // 如果云函数失败，提示用户手动输入
+        wx.showModal({
+          title: '提示',
+          content: '语音识别服务暂不可用，请手动输入或稍后再试',
+          showCancel: false
+        })
+      }
+    })
   },
 
   // 使用示例
