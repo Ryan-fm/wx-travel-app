@@ -320,7 +320,7 @@ Page({
   // 分享
   onShareAppMessage: function() {
     return {
-      title: 'AI旅行规划 - 智能生成个性化旅行路线',
+      title: '旅行规划 - 智能生成个性化旅行路线',
       path: '/pages/index/index'
     }
   }

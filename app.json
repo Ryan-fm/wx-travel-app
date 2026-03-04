@@ -8,7 +8,7 @@
   "window": {
     "backgroundTextStyle": "light",
     "navigationBarBackgroundColor": "#1a1a2e",
-    "navigationBarTitleText": "AI旅行规划",
+    "navigationBarTitleText": "旅行规划",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#0f0f1a",
     "enablePullDownRefresh": true
