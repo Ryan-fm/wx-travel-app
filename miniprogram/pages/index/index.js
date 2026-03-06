@@ -67,8 +67,17 @@ Page({
       },
       success: (res) => {
         console.log('获取用户路线成功:', res)
+        // 格式化日期
+        let routes = res.result.routes || []
+        routes = routes.map(route => {
+          if (route.createTime) {
+            const date = new Date(route.createTime)
+            route.createTime = `${date.getMonth() + 1}月${date.getDate()}日`
+          }
+          return route
+        })
         that.setData({
-          routes: res.result.routes || []
+          routes: routes
         })
       },
       fail: (err) => {
@@ -97,6 +106,14 @@ Page({
   onUserInput: function(e) {
     this.setData({
       userInput: e.detail.value
+    })
+  },
+
+  // 清空输入
+  clearInput: function() {
+    this.setData({
+      userInput: '',
+      inputFocused: true
     })
   },
 

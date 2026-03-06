@@ -1,15 +1,18 @@
 <view class="page">
   <!-- 顶部标题区 -->
-  <view class="header">
+  <view class="header fade-in">
     <view class="header-main">
       <text class="title">旅行规划</text>
       <text class="subtitle">输入您的旅行想法</text>
     </view>
-    <view class="header-entry" bindtap="viewHistory">历史记录</view>
+    <view class="header-entry" bindtap="viewHistory">
+      <text class="header-entry-text">历史记录</text>
+      <text class="header-entry-arrow">›</text>
+    </view>
   </view>
 
-  <!-- 输入区 无边框 聚焦底部主色 -->
-  <view class="input-wrap {{inputFocused ? 'focused' : ''}}">
+  <!-- 输入区 -->
+  <view class="input-wrap {{inputFocused ? 'focused' : ''}} {{isAnalyzing ? 'analyzing' : ''}} scale-in">
     <textarea
       class="input"
       placeholder="如：北京3天游，预算3000，喜欢历史文化"
@@ -19,49 +22,75 @@
       bindfocus="onInputFocus"
       bindblur="onInputBlur"
       maxlength="200"
+      disabled="{{isAnalyzing}}"
     />
     <view class="input-footer">
-      <view class="voice-btn {{isRecording ? 'recording' : ''}}" bindtap="toggleVoiceInput">
-        <text class="voice-icon">{{isRecording ? '⏹' : '🎤'}}</text>
-        <text class="voice-text">{{isRecording ? '停止' : '语音'}}</text>
+      <view class="input-left">
+        <view class="voice-btn {{isRecording ? 'recording' : ''}} {{isAnalyzing ? 'disabled' : ''}}" bindtap="{{isAnalyzing ? '' : 'toggleVoiceInput'}}">
+          <text class="voice-icon">{{isRecording ? '⏹' : '🎤'}}</text>
+          <text class="voice-text">{{isRecording ? '停止' : '语音'}}</text>
+        </view>
+        <view class="clear-btn {{userInput.length > 0 && !isAnalyzing ? 'show' : ''}}" bindtap="clearInput">
+          <text class="clear-icon">✕</text>
+        </view>
       </view>
-      <text class="char-count">{{userInput.length}}/200</text>
+      <text class="char-count {{userInput.length >= 180 ? 'warning' : ''}}">{{userInput.length}}/200</text>
+    </view>
+    
+    <!-- AI分析中动画 -->
+    <view class="analyzing-overlay" wx:if="{{isAnalyzing}}">
+      <view class="analyzing-content">
+        <view class="analyzing-dots">
+          <view class="dot"></view>
+          <view class="dot"></view>
+          <view class="dot"></view>
+        </view>
+        <text class="analyzing-text">正在分析您的需求</text>
+      </view>
     </view>
   </view>
 
   <!-- 分析按钮 -->
   <button
-    class="btn-analyze"
+    class="btn-analyze {{userInput.length > 0 ? 'active' : ''}}"
     bindtap="analyzeInput"
     disabled="{{userInput.length === 0 || isAnalyzing}}"
     wx:if="{{!showAnalysis}}"
   >
-    {{isAnalyzing ? '分析中...' : '智能分析'}}
+    <text class="btn-text">{{isAnalyzing ? '分析中...' : '智能分析'}}</text>
+    <text class="btn-icon" wx:if="{{!isAnalyzing}}">✨</text>
   </button>
 
   <!-- 分析结果 -->
-  <view class="result-card" wx:if="{{showAnalysis && analysisResult}}">
+  <view class="result-card fade-in" wx:if="{{showAnalysis && analysisResult}}">
     <view class="result-header">
-      <text class="result-title">分析结果</text>
+      <view class="result-title-wrap">
+        <text class="result-icon">🎯</text>
+        <text class="result-title">分析结果</text>
+      </view>
       <text class="result-edit" bindtap="toggleEditMode">{{isEditMode ? '完成' : '编辑'}}</text>
     </view>
     <view class="result-list">
       <view class="result-row">
+        <view class="result-icon-small">📍</view>
         <text class="label">目的地</text>
         <input wx:if="{{isEditMode}}" class="edit-input" value="{{analysisResult.destination}}" bindinput="onEditDestination" />
         <text wx:else class="value">{{analysisResult.destination}}</text>
       </view>
       <view class="result-row">
+        <view class="result-icon-small">📅</view>
         <text class="label">天数</text>
         <input wx:if="{{isEditMode}}" class="edit-input" type="number" value="{{analysisResult.days}}" bindinput="onEditDays" />
         <text wx:else class="value">{{analysisResult.days}}天</text>
       </view>
       <view class="result-row">
+        <view class="result-icon-small">💰</view>
         <text class="label">预算</text>
         <input wx:if="{{isEditMode}}" class="edit-input" type="number" value="{{analysisResult.budget}}" bindinput="onEditBudget" />
         <text wx:else class="value">¥{{analysisResult.budget}}</text>
       </view>
       <view class="result-row">
+        <view class="result-icon-small">✨</view>
         <text class="label">偏好</text>
         <view wx:if="{{isEditMode}}" class="tags-wrap">
           <view
@@ -72,32 +101,104 @@
             data-preference="{{item}}"
           >{{item}}</view>
         </view>
-        <text wx:else class="value">{{analysisResult.preferences.join('、') || '无'}}</text>
+        <view wx:else class="preferences-display">
+          <text wx:for="{{analysisResult.preferences}}" wx:key="*this" class="pref-tag">{{item}}</text>
+        </view>
       </view>
     </view>
     <view class="result-actions">
-      <button class="btn-outline" bindtap="reanalyze">重新分析</button>
-      <button class="btn-main" bindtap="confirmAnalysis">生成路线</button>
+      <button class="btn-outline" bindtap="reanalyze">
+        <text class="btn-icon-small">↺</text>
+        <text>重新分析</text>
+      </button>
+      <button class="btn-main" bindtap="confirmAnalysis">
+        <text>生成路线</text>
+        <text class="btn-icon-small">→</text>
+      </button>
     </view>
   </view>
 
+  <!-- 最近路线 -->
+  <view class="recent-routes slide-in" wx:if="{{routes.length > 0 && !showAnalysis}}">
+    <view class="section-header">
+      <text class="section-title">最近路线</text>
+      <text class="section-more" bindtap="viewHistory">查看全部</text>
+    </view>
+    <scroll-view class="routes-scroll" scroll-x="true" enable-flex="true">
+      <view
+        wx:for="{{routes}}"
+        wx:key="_id"
+        class="route-card"
+        bindtap="viewRouteDetail"
+        data-id="{{item._id}}"
+      >
+        <view class="route-image-wrap">
+          <image wx:if="{{item.mainImage}}" class="route-image" src="{{item.mainImage}}" mode="aspectFill" />
+          <view wx:else class="route-image-placeholder">
+            <text class="placeholder-icon">🗺️</text>
+          </view>
+          <view class="route-days-badge">{{item.days}}天</view>
+        </view>
+        <view class="route-info">
+          <text class="route-destination">{{item.destination}}</text>
+          <text class="route-date">{{item.createTime}}</text>
+          <view class="route-tags" wx:if="{{item.tags && item.tags.length > 0}}">
+            <text wx:for="{{item.tags.slice(0, 2)}}" wx:key="*this" wx:for-item="tag" class="route-tag">{{tag}}</text>
+          </view>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
   <!-- 示例 -->
-  <view class="examples" wx:if="{{!userInput && !showAnalysis}}">
-    <text class="examples-title">参考示例</text>
-    <view
-      class="example"
-      bindtap="useExample"
-      data-example="日本东京4天自由行，预算8000，喜欢动漫和美食"
-    >东京4天，预算8000，动漫美食</view>
-    <view
-      class="example"
-      bindtap="useExample"
-      data-example="泰国曼谷5日游，预算5000，喜欢寺庙和夜市"
-    >曼谷5天，预算5000，寺庙夜市</view>
-    <view
-      class="example"
-      bindtap="useExample"
-      data-example="韩国首尔3日游，预算4000，喜欢购物和韩餐"
-    >首尔3天，预算4000，购物韩餐</view>
+  <view class="examples fade-in" wx:if="{{!userInput && !showAnalysis}}">
+    <view class="section-header">
+      <text class="section-title">参考示例</text>
+    </view>
+    <scroll-view class="examples-scroll" scroll-x="true" enable-flex="true">
+      <view
+        class="example-card"
+        bindtap="useExample"
+        data-example="日本东京4天自由行，预算8000，喜欢动漫和美食"
+      >
+        <view class="example-icon">🗾</view>
+        <text class="example-title">东京动漫美食之旅</text>
+        <text class="example-desc">4天 · 预算8000</text>
+      </view>
+      <view
+        class="example-card"
+        bindtap="useExample"
+        data-example="泰国曼谷5日游，预算5000，喜欢寺庙和夜市"
+      >
+        <view class="example-icon">🛕</view>
+        <text class="example-title">曼谷寺庙夜市游</text>
+        <text class="example-desc">5天 · 预算5000</text>
+      </view>
+      <view
+        class="example-card"
+        bindtap="useExample"
+        data-example="韩国首尔3日游，预算4000，喜欢购物和韩餐"
+      >
+        <view class="example-icon">🛍️</view>
+        <text class="example-title">首尔购物美食行</text>
+        <text class="example-desc">3天 · 预算4000</text>
+      </view>
+      <view
+        class="example-card"
+        bindtap="useExample"
+        data-example="云南大理丽江7天深度游，预算6000，喜欢自然风光和摄影"
+      >
+        <view class="example-icon">🏔️</view>
+        <text class="example-title">云南深度摄影游</text>
+        <text class="example-desc">7天 · 预算6000</text>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-routes" wx:if="{{routes.length === 0 && !userInput && !showAnalysis}}">
+    <view class="empty-icon">✈️</view>
+    <text class="empty-text">还没有旅行路线</text>
+    <text class="empty-hint">输入您的旅行想法，我们将为您规划完美行程</text>
   </view>
 </view>

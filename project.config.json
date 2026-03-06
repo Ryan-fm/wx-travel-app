@@ -41,7 +41,7 @@
     "ignoreUploadUnusedFiles": true
   },
   "appid": "wx0ec08eca8627249b",
-  "projectname": "AI旅游路线规划",
+  "projectname": "智能旅行规划助手",
   "libVersion": "3.7.1",
   "compileType": "miniprogram",
   "simulatorPluginLibVersion": {},

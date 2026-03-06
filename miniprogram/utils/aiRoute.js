@@ -1,4 +1,4 @@
-// utils/aiRoute.js - AI route generation using wx.cloud.extend.AI
+// utils/aiRoute.js - 智能路线生成工具
 
 function buildPrompt(params) {
   const { destination, days, budget, tags, style, userInput } = params
@@ -21,7 +21,7 @@ function buildPrompt(params) {
 注意：控制总输出在3000字以内，务必输出完整可解析的json代码块。`
 }
 
-// Remove json block from display - both complete and partial (during streaming)
+// 移除JSON代码块 - 用于显示优化
 function stripJsonBlock(text) {
   const jsonStart = text.indexOf('```json')
   if (jsonStart === -1) return text.trim()
@@ -58,7 +58,7 @@ function repairJson(str) {
     .replace(/\r/g, '')
 }
 
-// Try to fix truncated JSON by closing open brackets
+// 尝试修复截断的JSON
 function fixTruncatedJson(str) {
   let fixed = str.trim()
   // Remove trailing comma before } or ]
@@ -75,7 +75,7 @@ function fixTruncatedJson(str) {
   return fixed
 }
 
-// Extract json block - robust for long content
+// 提取JSON代码块
 function extractJsonBlock(content) {
   const jsonStart = content.indexOf('```json')
   if (jsonStart === -1) {
@@ -93,7 +93,7 @@ function extractJsonBlock(content) {
 
 function parseItineraryResponse(content) {
   const jsonStr = extractJsonBlock(content)
-  if (!jsonStr || jsonStr.length < 10) throw new Error('AI路线格式解析失败')
+  if (!jsonStr || jsonStr.length < 10) throw new Error('路线格式解析失败')
 
   let result = tryParseJson(jsonStr)
   if (result) return normalizeItinerary(result)
@@ -135,7 +135,7 @@ function parseItineraryResponse(content) {
     }
   }
 
-  throw new Error('AI路线格式解析失败')
+  throw new Error('路线格式解析失败')
 }
 
 function normalizeItinerary(obj) {
@@ -163,10 +163,10 @@ function normalizeItinerary(obj) {
 }
 
 /**
- * Generate itinerary with streaming output
+ * 生成行程路线
  * @param {Object} params - destination, days, budget, tags, style
- * @param {Object} options - { onText: (fullText) => void } callback with accumulated text
- * @returns {Promise<Object>} parsed itinerary
+ * @param {Object} options - { onText: (fullText) => void } 回调函数
+ * @returns {Promise<Object>} 解析后的行程数据
  */
 async function generateItineraryWithAI(params, options = {}) {
   const model = wx.cloud.extend.AI.createModel('hunyuan-exp')
@@ -194,9 +194,9 @@ async function generateItineraryWithAI(params, options = {}) {
   return parseItineraryResponse(fullText)
 }
 
-// Realistic photo prompt - avoid AI look
+// 生成真实照片提示词
 function buildRealisticPhotoPrompt(desc) {
-  return `${desc}。真实实景照片、自然光线、实拍质感、手机/相机拍摄效果、无AI感、无过度修饰、真实旅游场景`
+  return `${desc}。真实实景照片、自然光线、实拍质感、手机/相机拍摄效果、无过度修饰、真实旅游场景`
 }
 
 async function generateRouteImageWithAI(params) {
@@ -218,7 +218,7 @@ async function generateRouteImageWithAI(params) {
   }
 }
 
-// Generate image for a single activity (location + activity)
+// 为单个活动生成图片
 async function generateActivityImageWithAI(location, activity, destination) {
   if (!location && !activity) return null
   try {
@@ -238,7 +238,7 @@ async function generateActivityImageWithAI(location, activity, destination) {
   }
 }
 
-// Generate images for all activities in itinerary (batch parallel)
+// 为行程中的所有活动生成图片(批量并行)
 async function generateActivityImages(itinerary, destination) {
   const items = []
   itinerary.itinerary.forEach((day, dayIdx) => {

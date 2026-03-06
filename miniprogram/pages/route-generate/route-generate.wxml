@@ -166,7 +166,7 @@
   <view class="generating-mask" wx:if="{{isGenerating}}">
     <view class="generating-content">
       <view class="generating-spinner"></view>
-      <text class="generating-text">AI正在为您规划路线...</text>
+      <text class="generating-text">正在为您规划路线...</text>
       <scroll-view class="streaming-output" scroll-y scroll-into-view="{{streamingText ? 'stream-end' : ''}}" wx:if="{{streamingText}}">
         <rich-text class="streaming-text" id="stream-end" nodes="{{streamingText}}"></rich-text>
       </scroll-view>

@@ -262,7 +262,7 @@ Page({
   // 分享
   onShareAppMessage: function() {
     return {
-      title: 'AI旅游路线规划 - 智能生成个性化旅行路线',
+      title: '智能旅行规划助手 - 个性化旅行路线',
       path: '/pages/route-generate/route-generate'
     }
   }
